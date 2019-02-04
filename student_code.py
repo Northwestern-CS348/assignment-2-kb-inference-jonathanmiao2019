@@ -158,7 +158,7 @@ class KnowledgeBase(object):
             elif not kb_fact.asserted and self.kb_supported(kb_fact):
                 return
             # if not supported, remove
-            elif not self.kb_supported(kb_fact) and kb_fact.asserted:
+            elif not self.kb_supported(kb_fact):
                 self.kb_remove(kb_fact)
 
 
