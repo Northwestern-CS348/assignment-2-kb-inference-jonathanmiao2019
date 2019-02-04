@@ -115,6 +115,26 @@ class KnowledgeBase(object):
         else:
             print("Invalid ask:", fact.statement)
             return []
+    def kb_remove(self, fr):
+        if not self.kb_supported(fr):
+            # Remove it's support from all facts and rules
+            for instance in fr.supports_rules:
+                instance.supported_by.remove(fr)
+                self.kb_remove(instance)
+            for instance in fr.supports_facts:
+                instance.supported_by.remove(fr)
+                self.kb_remove(instance)
+
+            if isinstance(fr, Fact):
+                self.facts.remove(fr)
+            if isinstance(fr, Rule):
+                self.rules.remove(fr)
+
+    def kb_supported(self, fact):
+        if len(fact.supported_by) > 1:
+            return True
+        else:
+            return False
 
     def kb_retract(self, fact):
         """Retract a fact from the KB
@@ -128,18 +148,19 @@ class KnowledgeBase(object):
         printv("Retracting {!r}", 0, verbose, [fact])
         ####################################################
         # Student code goes here
-    #     if fact in self.facts:
-    #         self.facts.remove(fact)
-    #         for fact_ele in self.facts:
-    #             if not fact_ele.supportedy_by:
-    #                 self.facts.remove(fact_ele)
-    #             elif fact in fact_ele.supportedy_by:
-    #                 fact_ele.supportedy_by.remove(fact)
-    #                 if not fact_ele.supportedy_by:
-    #                     self.facts.remove(fact_ele)
-    #
-    # # is a fact only supported by one fact and one rule, or can it be supported by multiple facts and a rule
-    # def kb_retract_recursive(self, fact):
+        # First check that we are retracting a fact that exists in the database
+        if isinstance(fact, Fact) and self.kb_ask(fact):
+            kb_fact = self._get_fact(fact)
+            # if asserted and supported, change asserted to false
+            if self.kb_supported(kb_fact) and kb_fact.asserted:
+                kb_fact.asserted = False
+            # if not asserted but supported, do nothing
+            elif not kb_fact.asserted and self.kb_supported(kb_fact):
+                return
+            # if not supported, remove
+            elif not self.kb_supported(kb_fact) and kb_fact.asserted:
+                self.kb_remove(kb_fact)
+
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
