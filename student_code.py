@@ -128,7 +128,18 @@ class KnowledgeBase(object):
         printv("Retracting {!r}", 0, verbose, [fact])
         ####################################################
         # Student code goes here
-        
+    #     if fact in self.facts:
+    #         self.facts.remove(fact)
+    #         for fact_ele in self.facts:
+    #             if not fact_ele.supportedy_by:
+    #                 self.facts.remove(fact_ele)
+    #             elif fact in fact_ele.supportedy_by:
+    #                 fact_ele.supportedy_by.remove(fact)
+    #                 if not fact_ele.supportedy_by:
+    #                     self.facts.remove(fact_ele)
+    #
+    # # is a fact only supported by one fact and one rule, or can it be supported by multiple facts and a rule
+    # def kb_retract_recursive(self, fact):
 
 class InferenceEngine(object):
     def fc_infer(self, fact, rule, kb):
@@ -146,3 +157,27 @@ class InferenceEngine(object):
             [fact.statement, rule.lhs, rule.rhs])
         ####################################################
         # Student code goes here
+        bindings = match(fact.statement, rule.lhs[0])
+        new_lhs = []
+        length = 0
+        if bindings:
+            length = len(rule.lhs)
+
+        # if it is a match, rhs of rule is
+        if bindings:
+            if length is 1:
+                new_statement = instantiate(rule.rhs, bindings)
+                new_fr = Fact(new_statement, [fact, rule])
+                fact.supports_facts.append(new_fr)
+                rule.supports_facts.append(new_fr)
+                kb.kb_add(new_fr)
+            else:
+                for i in range(1, length):
+                    new_statement = instantiate(rule.lhs[i], bindings)
+                    new_lhs.append(new_statement)
+                new_rhs = instantiate(rule.rhs, bindings)
+                new_fr = Rule([new_lhs, new_rhs], [fact, rule])
+
+                fact.supports_rules.append(new_fr)
+                rule.supports_rules.append(new_fr)
+                kb.kb_add(new_fr)
